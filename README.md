@@ -3,4 +3,4 @@ Go to https://colab.research.google.com/ > Open Notebook > Github > Enter URL: h
 
 Data already uploaded to GDrive here: https://drive.google.com/drive/folders/1oC6lOBEknvChYm3_gMV1kfccOF-N-8_k?usp=sharing   
 
-You can copy them to your own drive and mount them by running the train_cnn.ipynb in colab with the correct **data_dir** variable.
+Copy/add the data to your own drive and mount it by running the train_cnn.ipynb in colab with the correct **data_dir** variable.
