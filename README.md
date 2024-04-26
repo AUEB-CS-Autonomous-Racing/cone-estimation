@@ -1,6 +1,1 @@
-To use with Google Colab:  
-Go to https://colab.research.google.com/ > Open Notebook > Github > Enter URL: https://github.com/AUEB-CS-Autonomous-Racing/keypoint_regression_train/
-
-Data already uploaded to GDrive here: https://drive.google.com/drive/folders/1oC6lOBEknvChYm3_gMV1kfccOF-N-8_k?usp=sharing   
-
-Copy/add the data to your own drive and mount it by running the train_cnn.ipynb in colab with the correct **data_dir** variable.
+All files necessary for training in Google Colab, including Notebooks and Data are also uploaded here: https://drive.google.com/drive/folders/1Sl49YnoGrnwIgVHLj6eaiGEhaBXFA5Cu?usp=sharing
