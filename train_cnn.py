@@ -9,6 +9,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 from multiprocessing import freeze_support
+from torch.utils.data import random_split
 
 # Assuming your data is in a directory called 'data_dir' and is organized into 'train' and 'val' directories
 data_dir = 'data'
@@ -61,14 +62,24 @@ if __name__ == '__main__':
         ]),
     }
 
-    # Load datasets with annotations
-    custom_datasets = {x: CustomDataset(data_dir=os.path.join(data_dir, x),
-                                        annotations_file=os.path.join(data_dir, 'ann.json'),
-                                        transform=data_transforms[x]) for x in ['train', 'val']}
+
+
+    # Load the dataset
+    custom_dataset = CustomDataset(data_dir=os.path.join(data_dir, 'images'),
+                                   annotations_file=os.path.join(data_dir, 'ann.json'),
+                                   transform=data_transforms['train'])
+
+    # Split the dataset into train and validation
+    dataset_size = len(custom_dataset)
+    train_size = int(0.8 * dataset_size)
+    val_size = dataset_size - train_size
+    train_dataset, val_dataset = random_split(custom_dataset, [train_size, val_size])
 
     # Create data loaders
-    dataloaders = {x: DataLoader(custom_datasets[x], batch_size=4, shuffle=True, num_workers=4) for x in ['train', 'val']}
-
+    dataloaders = {
+        'train': DataLoader(train_dataset, batch_size=4, shuffle=True, num_workers=4),
+        'val': DataLoader(val_dataset, batch_size=4, shuffle=False, num_workers=4)
+    }
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") # cpu or mps
 
