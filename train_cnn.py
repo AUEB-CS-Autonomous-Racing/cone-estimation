@@ -106,8 +106,9 @@ if __name__ == '__main__':
             print(type(data[0]))
             print(data[0])
             print(data[1])
-            inputs, labels = data[0].to(device), data[1].to(device)
-
+            inputs = data[0].to(device)
+            labels = data[1]
+            
             # zero the parameter gradients
             optimizer.zero_grad()
 
