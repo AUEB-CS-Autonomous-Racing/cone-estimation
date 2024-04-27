@@ -30,12 +30,18 @@ class CustomDataset(Dataset):
         image = Image.open(img_path).convert('RGB')
         annotation = self.annotations[idx]['kp-1']
 
+        # Extract keypoints' coordinates and convert them into a tensor
+        keypoints = []
+        for kp in annotation:
+            x_coord = kp['x']
+            y_coord = kp['y']
+            keypoints.extend([x_coord, y_coord])
+        labels = torch.tensor(keypoints, dtype=torch.float)
+
         if self.transform:
             image = self.transform(image)
 
-        print(img_name)
-        print(annotation)
-        return image, annotation
+        return image, labels
 
     def load_annotations(self):
         with open(self.annotations_file, 'r') as f:
@@ -92,6 +98,9 @@ if __name__ == '__main__':
     model = cnn()
     model = model.to(device)
 
+    output_shape = model(torch.randn(1, 3, 80, 80)).shape
+    print("Model Output shape:", output_shape)
+
     # Define a Loss function and optimizer
     criterion = nn.SmoothL1Loss()
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
@@ -102,11 +111,9 @@ if __name__ == '__main__':
         running_loss = 0.0
         for i, data in enumerate(dataloaders['train'], 0):
             # get the inputs; data is a list of [inputs, labels]
-            print(type(data[0]))
-            print(data[0])
-            print(data[1])
+            print(f"data[1](labels): {data[1]}")
             inputs = data[0].to(device)
-            labels = data[1]
+            labels = data[1].to(device)
             
             # zero the parameter gradients
             optimizer.zero_grad()
