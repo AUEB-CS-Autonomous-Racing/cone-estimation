@@ -1,4 +1,5 @@
 from torch import nn
+from torch import flatten
 
 # Define a basic block
 class BasicBlock(nn.Module):
@@ -56,7 +57,9 @@ class CNN(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
-        out = out.view(out.size(0), -1)
+        out = self.relu(out)
+        out = nn.functional.adaptive_avg_pool2d(out, (1, 1))  # Global average pooling
+        out = flatten(out, 1)  # Flatten the output tensor
         out = self.linear(out)
         return out
 
