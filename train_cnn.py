@@ -81,7 +81,13 @@ if __name__ == '__main__':
         'val': DataLoader(val_dataset, batch_size=4, shuffle=False, num_workers=4)
     }
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") # cpu or mps
+    device = (
+    "cuda"
+    if torch.cuda.is_available()
+    else "mps"
+    if torch.backends.mps.is_available()
+    else "cpu"
+    )
 
     # Initialize the CNN
     model = cnn()
