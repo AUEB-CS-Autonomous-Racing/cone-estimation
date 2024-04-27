@@ -10,13 +10,13 @@ class BasicBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm3d(out_channels)
+        self.bn2 = nn.BatchNorm2d(out_channels)
 
         self.shortcut = nn.Sequential()
         if stride != 1 or in_channels != out_channels:
             self.shortcut = nn.Sequential(
                 nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
-                nn.BatchNorm3d(out_channels)
+                nn.BatchNorm2d(out_channels)
             )
 
     def forward(self, x):
