@@ -48,6 +48,31 @@ def delete_duplicates(folder1_del, folder2_keep):
     print(f"Deleted {deleted} duplicate images from {folder1_del}.")
     print(f"These images still exist inside {folder2_keep}")
 
+def find_anomaly(json_file, img_dir):
+    with open(json_file, 'r') as f:
+        data = json.load(f)
+    
+    entries_to_delete = [] 
+    
+    for idx, entry in enumerate(data):
+        if len(entry.get('kp-1', [])) != 7:
+            # Image with insufficient keypoints
+            print(f"{entry['img']}: {len(entry.get('kp-1', []))} keypoints")
+            image_path = os.path.join(img_dir, entry['img'])
+            print(f"Deleting {entry['img']}")
+            os.remove(image_path)
+            entries_to_delete.append(idx)
+
+    # Delete problematic entries from data
+    for idx in reversed(entries_to_delete):
+        del data[idx]
+
+    # Write updated data back to the JSON file
+    with open(json_file, 'w') as f:
+        json.dump(data, f, indent=4)
+
+    print("Deleted images tha don't have 7 keypoints,\
+           and removed them from the annotations.")
 
 def main():
     ## COPY_IMAGES
@@ -61,7 +86,8 @@ def main():
 
     ## DELETE_DUPLICATES
     # delete_duplicates("all_images", "verified_images")
-    pass
+    find_anomaly('ann.json', 'images')
+
 
 
 if __name__ == '__main__':

@@ -111,7 +111,6 @@ if __name__ == '__main__':
         running_loss = 0.0
         for i, data in enumerate(dataloaders['train'], 0):
             # get the inputs; data is a list of [inputs, labels]
-            print(f"data[1](labels): {data[1]}")
             inputs = data[0].to(device)
             labels = data[1].to(device)
             
