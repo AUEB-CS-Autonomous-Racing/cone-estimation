@@ -132,3 +132,25 @@ if __name__ == '__main__':
 
     print('Finished Training')
 
+    # Evaluate model
+    model.eval()  # Set model to evaluation mode
+    val_losses = []
+
+    with torch.no_grad():
+        for i, data in enumerate(dataloaders['val'], 0):
+            inputs, labels = data
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+            
+            # Forward pass
+            outputs = model(inputs)
+            
+            # Calculate loss (if needed)
+            loss = criterion(outputs, labels)
+            val_losses.append(loss.item())
+            
+    # Calculate average validation loss
+    avg_val_loss = sum(val_losses) / len(val_losses)
+    print('Average validation loss:', avg_val_loss)
+    torch.save(model.state_dict(), 'trained_model.pth')
+    print("Model saved.")
