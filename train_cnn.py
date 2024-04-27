@@ -94,7 +94,7 @@ if __name__ == '__main__':
     model = model.to(device)
 
     # Define a Loss function and optimizer
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.SmoothL1Loss()
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
 
