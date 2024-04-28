@@ -99,7 +99,7 @@ if __name__ == '__main__':
     model = model.to(device)
 
     # Define Hyperparameters
-    EPOCHS = 10
+    EPOCHS = 1
     LEARNING_RATE = 0.001
     MOMENTUM = 0.9
 
@@ -131,13 +131,13 @@ if __name__ == '__main__':
             # print statistics
             running_loss += loss.item()
 
-            # Print loss statistics
-            print('[%d] epoch loss: %.3f' % (epoch + 1, running_loss / len(dataloaders['train'])))
-            running_loss = 0.0
+        # Print loss statistics
+        print('[%d] epoch loss: %.3f' % (epoch + 1, running_loss / len(dataloaders['train'])))
+        running_loss = 0.0
 
     print('Finished Training')
 
-    # Evaluate model
+    # Evaluate and save model
     model.eval()  # Set model to evaluation mode
     val_losses = []
 
@@ -157,5 +157,6 @@ if __name__ == '__main__':
     # Calculate average validation loss
     avg_val_loss = sum(val_losses) / len(val_losses)
     print('Average validation loss:', avg_val_loss)
-    torch.save(model.state_dict(), 'trained_model.pth')
+    torch.save(model.state_dict(), 'models/' \
+            f'E{EPOCHS}-AVL{avg_val_loss:.4f}.pth')
     print("Model saved.")
