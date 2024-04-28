@@ -42,8 +42,8 @@ while True:
 
     # Draw circles or points on the image to mark the keypoints
     for kp in keypoints:
-        x = int(kp['x'] * image_cv2.shape[1] / kp['original_width'])
-        y = int(kp['y'] * image_cv2.shape[0] / kp['original_height'])
+        x = int(kp['x'] / 100.0 * kp['original_width'])
+        y = int(kp['y'] / 100.0 * kp['original_height'])
         cv2.circle(image_cv2, (x, y), 3, (0, 0, 255), -1)  # Draw a green circle at each keypoint
 
     # Display the image with the marked keypoints
