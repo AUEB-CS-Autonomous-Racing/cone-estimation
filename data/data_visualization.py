@@ -35,6 +35,8 @@ while True:
     current_image_annotations = [ann for ann in annotations_data if ann['img'] == os.path.basename(image_path)]
     keypoints = current_image_annotations[0]['kp-1'] if current_image_annotations else []
 
+    print(f"\n{image_path}\n{keypoints}\n")
+
     # Open the image using OpenCV
     image_cv2 = cv2.imread(image_path)
 
