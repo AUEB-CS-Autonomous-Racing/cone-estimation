@@ -6,11 +6,18 @@ from torchvision import transforms
 import os
 import random
 
-model_src = 'models/models/E10-AVL9.9054.pth'
+model_src = 'models/E10-AVL9.9054.pth'
+device = (
+"cuda"
+if torch.cuda.is_available()
+else "mps"
+if torch.backends.mps.is_available()
+else "cpu"
+)
 
 # Load the saved model
 model = cnn()  # Assuming 'cnn' is your model class
-model.load_state_dict(torch.load(model_src))
+model.load_state_dict(torch.load(model_src, map_location=torch.device(device)))
 model.eval()  # Set model to evaluation mode
 
 
