@@ -66,11 +66,13 @@ while True:
 
     # Open the image using OpenCV
     image_cv2 = cv2.imread(image_path)
+    height, width, channels = image_cv2.shape
 
     # Draw circles or points on the image to mark the keypoints
+    print(f"\n{keypoints}\n")
     for i in range(0, len(keypoints), 2):
-        x = int(keypoints[i])
-        y = int(keypoints[i+1])
+        x = int(keypoints[i] / 100.0 * width)
+        y = int(keypoints[i+1] / 100.0 * height)
         cv2.circle(image_cv2, (x, y), 3, (0, 0, 255), -1)  # Draw a green circle at each keypoint
 
     # Display the image with the marked keypoints
