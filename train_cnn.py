@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 from multiprocessing import freeze_support
 from torch.utils.data import random_split
 
-# Assuming your data is in a directory called 'data_dir' and is organized into 'train' and 'val' directories
+# Assuming your data is in data_dir that contains an ann.json file and an images directory
 data_dir = 'data'
 
 class CustomDataset(Dataset):
