@@ -98,16 +98,21 @@ if __name__ == '__main__':
     model = cnn()
     model = model.to(device)
 
+    # Define Hyperparameters
+    EPOCHS = 10
+    LEARNING_RATE = 0.001
+    MOMENTUM = 0.9
+
     output_shape = model(torch.randn(1, 3, 80, 80)).shape
     print("Model Output shape:", output_shape)
 
     # Define a Loss function and optimizer
     criterion = nn.SmoothL1Loss()
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
 
     # Train the network
-    for epoch in range(2):  # loop over the dataset multiple times
+    for epoch in range(EPOCHS):  # loop over the dataset multiple times
         running_loss = 0.0
         for i, data in enumerate(dataloaders['train'], 0):
             # get the inputs; data is a list of [inputs, labels]
