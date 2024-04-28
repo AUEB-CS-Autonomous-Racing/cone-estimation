@@ -6,9 +6,11 @@ from torchvision import transforms
 import os
 import random
 
+model_src = 'models/models/E10-AVL9.9054.pth'
+
 # Load the saved model
 model = cnn()  # Assuming 'cnn' is your model class
-model.load_state_dict(torch.load('trained_model.pth'))
+model.load_state_dict(torch.load(model_src))
 model.eval()  # Set model to evaluation mode
 
 
