@@ -6,7 +6,7 @@ from torchvision import transforms
 import os
 import random
 
-from pnp_algorithm import correspondence_2d_3d
+from pnp_algorithm import pnp
 
 model_src = 'models/E10-AVL9.9054.pth'
 device = (
@@ -84,7 +84,8 @@ while True:
 
         cv2.circle(image_cv2, (x, y), 3, (0, 0, 255), -1)  # Draw a green circle at each keypoint
 
-    correspondence_2d_3d(keypoints_2d)
+    # Test PnP Algorithm
+    pnp(keypoints_2d)
 
     # Display the image with the marked keypoints
     cv2.imshow("Image with Keypoints", image_cv2)
