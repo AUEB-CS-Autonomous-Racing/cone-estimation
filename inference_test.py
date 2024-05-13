@@ -6,6 +6,8 @@ from torchvision import transforms
 import os
 import random
 
+from pnp_algorithm import correspondence_2d_3d
+
 model_src = 'models/E10-AVL9.9054.pth'
 device = (
 "cuda"
@@ -69,11 +71,20 @@ while True:
     height, width, channels = image_cv2.shape
 
     # Draw circles or points on the image to mark the keypoints
-    print(f"\n{keypoints}\n")
+    keypoints_2d = {}
+    print()
+
     for i in range(0, len(keypoints), 2):
         x = int(keypoints[i] / 100.0 * width)
         y = int(keypoints[i+1] / 100.0 * height)
+        cv2.putText(image_cv2, str(i//2), (x, y+10), 0, 1, (0,0,255), 2)
+
+        # Add to 2D keypoints map
+        keypoints_2d[i//2] = [x, y]
+
         cv2.circle(image_cv2, (x, y), 3, (0, 0, 255), -1)  # Draw a green circle at each keypoint
+
+    correspondence_2d_3d(keypoints_2d)
 
     # Display the image with the marked keypoints
     cv2.imshow("Image with Keypoints", image_cv2)
