@@ -21,13 +21,13 @@ def correspondence_2d_3d(keypoints_2d):
     for idx in keypoints_2d.keys():
         correspondences[idx] = (keypoints_2d[idx], keypoints_3d[idx])
     
-    print(correspondences)
-    print()
-    pnp(correspondences)
+    return correspondences
 
 
-def pnp(correspondences):
+def pnp(points_2d):
     
+    correspondences = correspondence_2d_3d(points_2d)
+
     # Cone points
     points_3d = np.array([correspondences[i][1] for i in correspondences.keys()])
     points_3d = points_3d.astype('float32')
