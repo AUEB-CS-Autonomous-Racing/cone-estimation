@@ -63,6 +63,7 @@ def main():
     result = cone_detection_model.predict(image)
     bounding_boxes = result[0].boxes
 
+    full_image = cv2.imread(image_path)
     for box in bounding_boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
         cropped_img = image[y1:y2, x1:x2]
@@ -75,10 +76,6 @@ def main():
 
             keypoints = keypoint_regression(cropped_img)
 
-            full_image = cv2.imread(image_path)
-
-            
-            full_height, full_width, channels = full_image.shape
 
             # Draw points on the image to mark the keypoints
             keypoints_2d = {}
@@ -95,14 +92,10 @@ def main():
                 # Add to 2D keypoints map
                 keypoints_2d[i//2] = [full_x, full_y]
 
-                cv2.circle(full_image, (full_x, full_y), 3, (0, 0, 255), -1)
-                cv2.circle(cropped_img, (cropped_x, cropped_y), 3, (0, 0, 255), -1)  
+                cv2.circle(full_image, (full_x, full_y), 2, (0, 0, 255), -1)
 
-            cv2.imshow("cropped", cropped_img)
-            cv2.waitKey(0)
-
-            cv2.imshow("Keypoints", full_image)
-            cv2.waitKey(0)
+    cv2.imshow("Keypoints", full_image)
+    cv2.waitKey(0)
 
 
 if __name__ == '__main__':
