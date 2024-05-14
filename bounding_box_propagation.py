@@ -50,9 +50,15 @@ def keypoint_regression(image):
 
     return keypoints
 
+colors = {
+    0: '#0000FF',
+    1: '#FFFF00',
+    2: '#FFA500',
+    3: '#FFA500',
+}
 
 def main():
-    image_path = 'full_images/amz_00000.jpg'
+    image_path = 'full_images/amz_00001.jpg'
     image = cv2.imread(image_path)
 
     cone_detection_src = 'models/yolov8s700.pt'
@@ -64,8 +70,11 @@ def main():
     full_image = cv2.imread(image_path)
 
     cone_positions = []
-
+    id = 0
     for box in bounding_boxes:
+        id += 1
+        conf = box.conf.item()
+        label = box.cls.item()
         x1, y1, x2, y2 = map(int, box.xyxy[0])
         cropped_img = image[y1:y2, x1:x2]
 
@@ -73,15 +82,13 @@ def main():
         conf = box.conf.item()
         if conf > 0.5 and cropped_height > 10 and cropped_width > 10:
             
-            print("Cropped (width x height):", cropped_width, cropped_height)
-
+            print("Cropped (width x height):", cropped_width, cropped_height, "\n")
             keypoints = keypoint_regression(cropped_img)
-
 
             # Draw points on the image to mark the keypoints
             keypoints_2d = {}
-            print()
-
+            cv2.putText(full_image, str(id), (x2, y2), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 1)
+            
             for i in range(0, len(keypoints), 2):
                 
                 cropped_x = int(keypoints[i] / 100.0 * cropped_width)
@@ -98,8 +105,8 @@ def main():
             # Estimate cone position
             R, t = pnp(keypoints_2d)
             
-            cone_positions.append(t)
-    
+            cone_positions.append({"id": id, "label": label, "pos": t})    
+
     cv2.imshow("Keypoints", full_image)
     cv2.waitKey(0)
 
@@ -107,19 +114,20 @@ def main():
     plt.figure()
     plt.title("Estimated Cone Position Relative to Camera")
 
-    # # Plot camera viewpoint (optional)
+    # Camera viewpoint
     plt.scatter(0, 0, color='r', label='Camera')
 
     # # Plot estimated cone position
-    for pos in cone_positions:
-        plt.scatter(pos[0], pos[1], color='g')
+    for cone in cone_positions:
+        plt.scatter(cone["pos"][0], cone["pos"][1], color=colors[cone['label']])
+        plt.annotate(f"{cone["id"]}", (cone["pos"][0], cone["pos"][1]+3))
 
     # # Set axis labels and legend
-    plt.xlabel("X-axis (m)")
-    plt.ylabel("Y-axis (m)")
+    plt.xlabel("X-axis")
+    plt.ylabel("Y-axis")
     plt.legend()
 
-    # # Show the plot
+    # Show the plot
     plt.grid(True)
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
