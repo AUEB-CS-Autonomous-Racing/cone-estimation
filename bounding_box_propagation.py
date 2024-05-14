@@ -1,13 +1,11 @@
 from cnn import cnn
 import torch
 import cv2
-from PIL import Image
 from torchvision import transforms
-import os
-import random
 from ultralytics import YOLO
-
 from pnp_algorithm import pnp
+import numpy as np
+import matplotlib.pyplot as plt
 
 def keypoint_regression(image):
     keypoint_model_src = 'models/E10-AVL9.9054.pth'
@@ -64,6 +62,9 @@ def main():
     bounding_boxes = result[0].boxes
 
     full_image = cv2.imread(image_path)
+
+    cone_positions = []
+
     for box in bounding_boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
         cropped_img = image[y1:y2, x1:x2]
@@ -94,9 +95,62 @@ def main():
 
                 cv2.circle(full_image, (full_x, full_y), 2, (0, 0, 255), -1)
 
+            # Estimate cone position
+            R, t = pnp(keypoints_2d)
+            
+            cone_positions.append(t)
+    
     cv2.imshow("Keypoints", full_image)
     cv2.waitKey(0)
 
+    # Create a new figure and axis for the 2D plot
+    plt.figure()
+    plt.title("Estimated Cone Position Relative to Camera")
+
+    # # Plot camera viewpoint (optional)
+    plt.scatter(0, 0, color='r', label='Camera')
+
+    # # Plot estimated cone position
+    for pos in cone_positions:
+        plt.scatter(pos[0], pos[1], color='g')
+
+    # # Set axis labels and legend
+    plt.xlabel("X-axis (m)")
+    plt.ylabel("Y-axis (m)")
+    plt.legend()
+
+    # # Show the plot
+    plt.grid(True)
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
+
+
+
+
+def estimate_cone_position(R, t):
+    
+    keypoints_3d = {
+        0: [-114, 0, 0],
+        1: [-69, 157, 0],
+        2: [-39, 265, 0],
+        3: [0, 325, 0],
+        4: [114, 0, 0],
+        5: [69, 157, 0],
+        6: [39, 265, 0]
+    }
+
+    keypoints_homogeneous = np.hstack((np.array(list(keypoints_3d.values())), 
+                                       np.ones((len(keypoints_3d), 1))))
+    
+    print(keypoints_homogeneous)
+    # Transform keypoints to camera coordinate system
+    print(R.shape)
+    keypoints_camera = np.dot(np.linalg.inv(R), (keypoints_homogeneous - t.reshape(1, -1)))
+
+    # Estimate 3D position of the cone (e.g., centroid)
+    cone_position = np.mean(keypoints_camera, axis=0)
+
+    return cone_position
 
 if __name__ == '__main__':
     main()

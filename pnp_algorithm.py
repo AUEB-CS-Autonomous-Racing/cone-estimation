@@ -42,7 +42,6 @@ def pnp(points_2d):
     # Distortion coefficients
     dist_coeffs = np.zeros((4, 1))  # Assuming no distortion
 
-    
     retval, rvec, tvec = cv2.solvePnP(points_3d, points_2d, K, dist_coeffs)
 
     # Convert rotation vector to rotation matrix
@@ -52,6 +51,8 @@ def pnp(points_2d):
     print(R)
     print("\nTranslation Vector:")
     print(tvec)
+
+    return R, tvec
 
 
 def get_camera_matrix():
