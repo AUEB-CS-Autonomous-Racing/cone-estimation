@@ -124,33 +124,5 @@ def main():
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
-
-
-
-def estimate_cone_position(R, t):
-    
-    keypoints_3d = {
-        0: [-114, 0, 0],
-        1: [-69, 157, 0],
-        2: [-39, 265, 0],
-        3: [0, 325, 0],
-        4: [114, 0, 0],
-        5: [69, 157, 0],
-        6: [39, 265, 0]
-    }
-
-    keypoints_homogeneous = np.hstack((np.array(list(keypoints_3d.values())), 
-                                       np.ones((len(keypoints_3d), 1))))
-    
-    print(keypoints_homogeneous)
-    # Transform keypoints to camera coordinate system
-    print(R.shape)
-    keypoints_camera = np.dot(np.linalg.inv(R), (keypoints_homogeneous - t.reshape(1, -1)))
-
-    # Estimate 3D position of the cone (e.g., centroid)
-    cone_position = np.mean(keypoints_camera, axis=0)
-
-    return cone_position
-
 if __name__ == '__main__':
     main()
