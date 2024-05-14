@@ -80,8 +80,8 @@ def main():
 
         cropped_height, cropped_width, _ = cropped_img.shape
         conf = box.conf.item()
-        if conf > 0.5 and cropped_height > 10 and cropped_width > 10:
-            
+        
+        if conf > 0.2:
             print("Cropped (width x height):", cropped_width, cropped_height, "\n")
             keypoints = keypoint_regression(cropped_img)
 
@@ -114,7 +114,7 @@ def main():
     plt.figure()
     plt.title("Estimated Cone Position Relative to Camera")
 
-    # Camera viewpoint
+    # camera viewpoint
     plt.scatter(0, 0, color='r', label='Camera')
 
     # # Plot estimated cone position
