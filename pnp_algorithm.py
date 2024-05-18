@@ -42,24 +42,28 @@ def pnp(points_2d):
     # Distortion coefficients
     dist_coeffs = np.zeros((4, 1))  # Assuming no distortion
 
-    retval, rvec, tvec = cv2.solvePnP(points_3d, points_2d, K, dist_coeffs)
+    ret, rvec, tvec = cv2.solvePnP(points_3d, points_2d, K, dist_coeffs)
 
     # Convert rotation vector to rotation matrix
-    R, _ = cv2.Rodrigues(rvec)
+    rvec, _ = cv2.Rodrigues(rvec)
 
-    print("Rotation Matrix:")
-    print(R)
-    print("\nTranslation Vector:")
-    print(tvec)
-
-    return R, tvec
+    return rvec, tvec
 
 
 def get_camera_matrix():
+
+    # IMX219-83 intrinsics
     f_mm = 2.6  # Focal length in mm
     W = 3280    # Image width in pixels
     H = 2464    # Image height in pixels
     CMOS_width = 1/4  # CMOS size in inches
+
+    # ETH intrinsics
+    f_mm = 10
+    W = 1600
+    H = 1200
+    CMOS_width = 1/4
+
 
     # Convert focal length from mm to pixels
     f_px = f_mm * W / CMOS_width

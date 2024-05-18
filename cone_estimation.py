@@ -15,7 +15,7 @@ colors = {
 }
 
 def main():
-    image_path = 'full_images/amz_00005.jpg'
+    image_path = 'full_images/amz_00000.jpg'
     image = cv2.imread(image_path)
 
     cone_detection_src = 'models/yolov8s700.pt'
@@ -60,9 +60,13 @@ def main():
                 cv2.circle(full_image, (full_x, full_y), 2, (0, 0, 255), -1)
 
             # Estimate cone position
-            R, t = pnp(keypoints_2d)
-            
-            cone_positions.append({"id": id, "label": label, "pos": t})    
+            print(f"id: {id}")
+            rvec, tvec = pnp(keypoints_2d)
+            tvec = tvec / 10000
+            tvec[2] /= 100
+            print(f"Translation Vector:\n{tvec}")
+
+            cone_positions.append({"id": id, "label": label, "pos": tvec})    
 
     cv2.imshow("Keypoints", full_image)
     cv2.waitKey(0)
@@ -76,16 +80,16 @@ def main():
 
     # # Plot estimated cone position
     for cone in cone_positions:
+        
+        x = cone["pos"][0]
+        z = cone["pos"][2]
 
-        # rotated_pos = np.dot(R, cone["pos"])
-        # cone["pos"] = rotated_pos
-
-        plt.scatter(cone["pos"][0], cone["pos"][1], color=colors[cone['label']])
-        plt.annotate(f"{cone["id"]}", (cone["pos"][0], cone["pos"][1]+3))
+        plt.scatter(x, z, color=colors[cone['label']])
+        plt.annotate(f"{cone["id"]}", (x, z))
 
     # # Set axis labels and legend
     plt.xlabel("X-axis")
-    plt.ylabel("Y-axis")
+    plt.ylabel("Z-axis")
     plt.legend()
 
     # Show the plot
