@@ -6,6 +6,7 @@ from ultralytics import YOLO
 from pnp_algorithm import pnp
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 colors = {
     0: '#0000FF',
@@ -15,19 +16,27 @@ colors = {
 }
 
 def main():
+
+    total_time_start = time.time()
+
     image_path = 'full_images/amz_00000.jpg'
     image = cv2.imread(image_path)
 
     cone_detection_src = 'models/yolov8s700.pt'
     cone_detection_model = YOLO(cone_detection_src)
 
+    cone_det_start = time.time()
     result = cone_detection_model.predict(image)
+    cone_det_end = time.time()
     bounding_boxes = result[0].boxes
 
     full_image = cv2.imread(image_path)
 
     cone_positions = []
     id = 0
+    
+    keypoint_reg_time = []
+
     for box in bounding_boxes:
         id += 1
         conf = box.conf.item()
@@ -40,7 +49,11 @@ def main():
         
         if conf > 0.2:
             print("Cropped (width x height):", cropped_width, cropped_height, "\n")
+
+            keypoint_reg_start = time.time()
             keypoints = keypoint_regression(cropped_img)
+            keypoint_reg_end = time.time()
+            keypoint_reg_time.append(keypoint_reg_end-keypoint_reg_start)
 
             # Draw points on the image to mark the keypoints
             keypoints_2d = {}
@@ -66,7 +79,14 @@ def main():
             tvec[2] /= 100
             print(f"Translation Vector:\n{tvec}")
 
-            cone_positions.append({"id": id, "label": label, "pos": tvec})    
+            cone_positions.append({"id": id, "label": label, "pos": tvec})  
+
+    total_time_end = time.time()
+    print()
+    print(f"Total Pipeline Time: {total_time_end-total_time_start:.4}")  
+    print(f"Cone Detection Time: {cone_det_end-cone_det_start:.4}")
+    print(f"Average Keypoint Regr.Time Per Box: {np.mean(keypoint_reg_time):.4}")
+    print(f"Total Keypoint Regr. Time: {sum(keypoint_reg_time):.4}")
 
     cv2.imshow("Keypoints", full_image)
     cv2.waitKey(0)
