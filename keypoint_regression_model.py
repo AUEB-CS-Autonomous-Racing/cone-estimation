@@ -18,7 +18,7 @@ class KeypointRegression:
 
         # Load the saved model
         self.model = cnn()  # Assuming 'cnn' is your model class
-        self.model.load_state_dict(torch.load(model_src, map_location=torch.device(device)))
+        self.model.load_state_dict(torch.load(model_src, map_location=torch.device(self.device)))
         self.model.eval()  # Set model to evaluation mode
 
 
