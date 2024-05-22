@@ -105,7 +105,7 @@ def main():
         z = cone["pos"][2]
 
         plt.scatter(x, z, color=colors[cone['label']])
-        plt.annotate(f"{cone["id"]}", (x, z))
+        plt.annotate(f'{cone["id"]}', (x, z))
 
     # # Set axis labels and legend
     plt.xlabel("X-axis")
