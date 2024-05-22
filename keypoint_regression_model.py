@@ -15,6 +15,8 @@ class KeypointRegression:
             if torch.backends.mps.is_available()
             else "cpu"
             )
+        
+        print(f"KeypointRegression Device: {self.device}")
 
         # Load the saved model
         self.model = cnn()  # Assuming 'cnn' is your model class
