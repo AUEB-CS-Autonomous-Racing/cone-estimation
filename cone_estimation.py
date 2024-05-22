@@ -1,4 +1,5 @@
 from cnn import cnn
+from keypoint_regression_model import KeypointRegression
 import torch
 import cv2
 from torchvision import transforms
@@ -37,6 +38,8 @@ def main():
     
     keypoint_reg_time = []
 
+    keypoint_model = KeypointRegression('models/E10-AVL9.9054.pth')
+
     for box in bounding_boxes:
         id += 1
         conf = box.conf.item()
@@ -51,7 +54,7 @@ def main():
             print("Cropped (width x height):", cropped_width, cropped_height, "\n")
 
             keypoint_reg_start = time.time()
-            keypoints = keypoint_regression(cropped_img)
+            keypoints = keypoint_model.eval(cropped_img)
             keypoint_reg_end = time.time()
             keypoint_reg_time.append(keypoint_reg_end-keypoint_reg_start)
 
@@ -117,49 +120,6 @@ def main():
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
 
-
-def keypoint_regression(image):
-    keypoint_model_src = 'models/E10-AVL9.9054.pth'
-    
-
-    device = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps"
-    if torch.backends.mps.is_available()
-    else "cpu"
-    )
-
-    # Load the saved model
-    model = cnn()  # Assuming 'cnn' is your model class
-    model.load_state_dict(torch.load(keypoint_model_src, map_location=torch.device(device)))
-    model.eval()  # Set model to evaluation mode
-
-
-    # Define the transform for preprocessing the images
-    transform = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize((80, 80)),  # Resize the image to match the input size of your model
-        transforms.ToTensor(),         # Convert the image to a PyTorch tensor
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])  # Normalize the image
-    ])
-
-    # Apply the transform to preprocess the image
-    input_image = transform(image).unsqueeze(0)  # Add a batch dimension
-
-    # Move the input image to the device (GPU or CPU)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    input_image = input_image.to(device)
-
-    # Perform inference
-    with torch.no_grad():  # Disable gradient calculation during inference
-        model.eval()  # Set model to evaluation mode
-        output = model(input_image)
-
-    # Extract keypoints from the output tensor
-    keypoints = output.squeeze().cpu().numpy()  # Assuming output is a tensor
-
-    return keypoints
 
 if __name__ == '__main__':
     main()
