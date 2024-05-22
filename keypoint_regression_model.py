@@ -8,7 +8,7 @@ class KeypointRegression:
 
     def __init__(self, model_src):
 
-        device = (
+        self.device = (
             "cuda"
             if torch.cuda.is_available()
             else "mps"
@@ -35,14 +35,13 @@ class KeypointRegression:
         input_image = self.transform(image).unsqueeze(0)  # Add a batch dimension
 
         # Move the input image to the device (GPU or CPU)
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        input_image = input_image.to(device)
+        input_image = input_image.to(self.device)
 
         with torch.no_grad():  # Disable gradient calculation during inference
             self.model.eval()  # Set model to evaluation mode
             output = self.model(input_image)
 
         # Extract keypoints from the output tensor
-        keypoints = output.squeeze().cpu().numpy()  # Assuming output is a tensor
+        keypoints = output.squeeze().cpu().numpy() 
 
         return keypoints
