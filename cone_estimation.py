@@ -58,10 +58,8 @@ def main():
             keypoint_reg_end = time.time()
             keypoint_reg_time.append(keypoint_reg_end-keypoint_reg_start)
 
-            # Draw points on the image to mark the keypoints
             keypoints_2d = {}
             cv2.putText(full_image, str(id), (x2, y2), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 1)
-            
             for i in range(0, len(keypoints), 2):
                 
                 cropped_x = int(keypoints[i] / 100.0 * cropped_width)
@@ -70,7 +68,7 @@ def main():
                 full_x = int(cropped_x + x1)
                 full_y = int(cropped_y + y1)
 
-                # Add to 2D keypoints map
+                # Add to 2D keypoints map for PnP
                 keypoints_2d[i//2] = [full_x, full_y]
 
                 cv2.circle(full_image, (full_x, full_y), 2, (0, 0, 255), -1)
@@ -85,39 +83,28 @@ def main():
             cone_positions.append({"id": id, "label": label, "pos": tvec})  
 
     total_time_end = time.time()
-    print()
-    print(f"Total Pipeline Time: {total_time_end-total_time_start:.4}")  
+    print(f"\nTotal Pipeline Time: {total_time_end-total_time_start:.4}")  
     print(f"Cone Detection Time: {cone_det_end-cone_det_start:.4}")
     print(f"Average Keypoint Regr.Time Per Box: {np.mean(keypoint_reg_time):.4}")
     print(f"Total Keypoint Regr. Time: {sum(keypoint_reg_time):.4}")
 
     cv2.imshow("Keypoints", full_image)
     cv2.waitKey(0)
-
-    # Create a new figure and axis for the 2D plot
     plt.figure()
     plt.title("Estimated Cone Position Relative to Camera")
-
-    # camera viewpoint
     plt.scatter(0, 0, color='r', label='Camera')
-
-    # # Plot estimated cone position
-    for cone in cone_positions:
-        
-        x = cone["pos"][0]
-        z = cone["pos"][2]
-
-        plt.scatter(x, z, color=colors[cone['label']])
-        plt.annotate(f'{cone["id"]}', (x, z))
-
-    # # Set axis labels and legend
     plt.xlabel("X-axis")
     plt.ylabel("Z-axis")
     plt.legend()
-
-    # Show the plot
     plt.grid(True)
     plt.gca().set_aspect('equal', adjustable='box')
+    
+    for cone in cone_positions:   
+        x = cone["pos"][0]
+        z = cone["pos"][2]
+        plt.scatter(x, z, color=colors[cone['label']])
+        plt.annotate(f'{cone["id"]}', (x, z))
+    
     plt.show()
 
 

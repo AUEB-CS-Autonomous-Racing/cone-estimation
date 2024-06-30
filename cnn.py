@@ -1,7 +1,6 @@
 from torch import nn
 from torch import flatten
 
-# Define a basic block
 class BasicBlock(nn.Module):
     expansion = 1
 
@@ -27,8 +26,6 @@ class BasicBlock(nn.Module):
         out = self.relu(out)
         return out
 
-
-# Define the CNN
 class CNN(nn.Module):
     def __init__(self, block, num_blocks, num_classes=14):
         super(CNN, self).__init__()

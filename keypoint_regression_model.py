@@ -19,17 +19,18 @@ class KeypointRegression:
         print(f"KeypointRegression Device: {self.device}")
 
         # Load the saved model
-        self.model = cnn()  # Assuming 'cnn' is your model class
+        self.model = cnn()
         self.model.load_state_dict(torch.load(model_src, map_location=torch.device(self.device)))
         self.model.eval()  # Set model to evaluation mode
 
 
-        # Define the transform for preprocessing the images
+        # transform for preprocessing the images
         self.transform = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize((80, 80)),  # Resize the image to match the input size of your model
-            transforms.ToTensor(),         # Convert the image to a PyTorch tensor
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])  # Normalize the image
+            transforms.Resize((80, 80)),  # input size of model
+            transforms.ToTensor(),
+            # Normalize: ImageNet Values for Mean and Standard Deviation in RGB
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
 
     def eval(self, image):
@@ -43,7 +44,6 @@ class KeypointRegression:
             self.model.eval()  # Set model to evaluation mode
             output = self.model(input_image)
 
-        # Extract keypoints from the output tensor
         keypoints = output.squeeze().cpu().numpy() 
 
         return keypoints
