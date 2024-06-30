@@ -33,17 +33,20 @@ class KeypointRegression:
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
 
-    def eval(self, image):
+    def eval(self, images):
+        """
+        Input: Cropped bounding box images batch
+        """
         
-        input_image = self.transform(image).unsqueeze(0)  # Add a batch dimension
+        batch = torch.stack([self.transform(image) for image in images])
+        batch = batch.to(self.device)
+        print(f"batch shape: {batch.shape}")
 
-        # Move the input image to the device (GPU or CPU)
-        input_image = input_image.to(self.device)
+        with torch.no_grad():  # disable gradient calculation during inference
+            self.model.eval()  # set model to evaluation mode
+            output = self.model(batch)
 
-        with torch.no_grad():  # Disable gradient calculation during inference
-            self.model.eval()  # Set model to evaluation mode
-            output = self.model(input_image)
-
+        # move output to cpu and convert to numpy array
         keypoints = output.squeeze().cpu().numpy() 
 
         return keypoints

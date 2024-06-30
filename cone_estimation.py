@@ -36,10 +36,9 @@ def main():
     cone_positions = []
     id = 0
     
-    keypoint_reg_time = []
 
     keypoint_model = KeypointRegression('models/E10-AVL9.9054.pth')
-
+    cropped_boxes = []
     for box in bounding_boxes:
         id += 1
         conf = box.conf.item()
@@ -48,45 +47,50 @@ def main():
         cropped_img = image[y1:y2, x1:x2]
 
         cropped_height, cropped_width, _ = cropped_img.shape
-        conf = box.conf.item()
-        
-        if conf > 0.2:
-            print("Cropped (width x height):", cropped_width, cropped_height, "\n")
 
-            keypoint_reg_start = time.time()
-            keypoints = keypoint_model.eval(cropped_img)
-            keypoint_reg_end = time.time()
-            keypoint_reg_time.append(keypoint_reg_end-keypoint_reg_start)
+        cropped_boxes.append(cropped_img)
+        print("Cropped (width x height):", cropped_width, cropped_height, "\n")
 
-            keypoints_2d = {}
-            cv2.putText(full_image, str(id), (x2, y2), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 1)
-            for i in range(0, len(keypoints), 2):
-                
-                cropped_x = int(keypoints[i] / 100.0 * cropped_width)
-                cropped_y = int(keypoints[i+1] / 100.0 * cropped_height)
+    keypoint_reg_start = time.time()
+    keypoints = keypoint_model.eval(cropped_boxes)
+    print(keypoints.shape)
+    keypoint_reg_end = time.time()
 
-                full_x = int(cropped_x + x1)
-                full_y = int(cropped_y + y1)
+    keypoints_2d = {}
+    cv2.putText(full_image, str(id), (x2, y2), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 1)
 
-                # Add to 2D keypoints map for PnP
-                keypoints_2d[i//2] = [full_x, full_y]
+    # Map model keypoint output from cropped image to full image coordinates
+    for i in range(0, len(keypoints), 2):
 
-                cv2.circle(full_image, (full_x, full_y), 2, (0, 0, 255), -1)
+        # TODO: Does this work?
+        print(i)
+        cropped_img = cropped_boxes[int(i/2)] # for loop step = 2
+        cropped_height, cropped_width, _ = cropped_img.shape
 
-            # Estimate cone position
-            print(f"id: {id}")
-            rvec, tvec = pnp(keypoints_2d)
-            tvec = tvec / 10000
-            tvec[2] /= 100
-            print(f"Translation Vector:\n{tvec}")
+        cropped_x = int(keypoints[i] / 100.0 * cropped_width)
+        cropped_y = int(keypoints[i+1] / 100.0 * cropped_height)
 
-            cone_positions.append({"id": id, "label": label, "pos": tvec})  
+        full_x = int(cropped_x + x1)
+        full_y = int(cropped_y + y1)
+
+        # Add to 2D keypoints map for PnP
+        keypoints_2d[i//2] = [full_x, full_y]
+
+        cv2.circle(full_image, (full_x, full_y), 2, (0, 0, 255), -1)
+
+        # Estimate cone position
+        print(f"id: {id}")
+        rvec, tvec = pnp(keypoints_2d)
+        tvec = tvec / 10000
+        tvec[2] /= 100
+        print(f"Translation Vector:\n{tvec}")
+
+        cone_positions.append({"id": id, "label": label, "pos": tvec})  
 
     total_time_end = time.time()
     print(f"\nTotal Pipeline Time: {total_time_end-total_time_start:.4}")  
     print(f"Cone Detection Time: {cone_det_end-cone_det_start:.4}")
-    print(f"Average Keypoint Regr.Time Per Box: {np.mean(keypoint_reg_time):.4}")
-    print(f"Total Keypoint Regr. Time: {sum(keypoint_reg_time):.4}")
+    print(f"Total Keypoint Regr. Time: {keypoint_reg_end-keypoint_reg_start:.4}")
 
     cv2.imshow("Keypoints", full_image)
     cv2.waitKey(0)
