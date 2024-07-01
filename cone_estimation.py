@@ -28,7 +28,7 @@ def main():
 
     total_time_start = time.time()
 
-    image_path = 'full_images/amz_00000.jpg'
+    image_path = 'full_images/amz_00045.jpg'
     image = cv2.imread(image_path)
 
     cone_detection_src = 'models/yolov8s700.pt'
@@ -61,8 +61,6 @@ def main():
     keypoint_reg_end = time.time()
     print("Keypoint regression finished")
 
-    print(keypoints.shape)
-
     keypoints_2d = {}
     # Map 7 keypoints for each cone
     for cone in cone_info.values():
@@ -84,7 +82,7 @@ def main():
             # Add to 2D keypoints map for PnP
             keypoints_2d[point//2] = [full_x, full_y]
 
-            cv2.circle(full_image, (full_x, full_y), 2, cone["label"], -1)
+            cv2.circle(full_image, (full_x, full_y), 2, (0, 0, 255), -1)
 
         # Estimate cone position with PnP using all the 2d keypoints for this cone
         rvec, tvec = pnp(keypoints_2d)
