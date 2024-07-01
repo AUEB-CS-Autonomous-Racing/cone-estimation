@@ -1,10 +1,11 @@
-from cnn import cnn
 from keypoint_regression_model import KeypointRegression
 import cv2
 from ultralytics import YOLO
 from pnp_algorithm import PnP
 import matplotlib.pyplot as plt
 import time
+import numpy as np
+import json
 
 colors = {
     0: '#0000FF',
@@ -91,8 +92,8 @@ def cone_estimation(demo=True):
         tvec[2] /= 100
 
         # 2D Coordinates for cone position in map
-        cone["X"] = tvec[0]
-        cone["Y"] = tvec[2]
+        cone["X"] = tvec[0][0]
+        cone["Y"] = tvec[2][0]
     
 
     total_time_end = time.time()
