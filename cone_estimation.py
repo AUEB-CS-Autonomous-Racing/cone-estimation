@@ -1,11 +1,8 @@
 from cnn import cnn
 from keypoint_regression_model import KeypointRegression
-import torch
 import cv2
-from torchvision import transforms
 from ultralytics import YOLO
-from pnp_algorithm import pnp
-import numpy as np
+from pnp_algorithm import PnP
 import matplotlib.pyplot as plt
 import time
 
@@ -16,8 +13,10 @@ colors = {
     3: '#FFA500',
 }
 
-def main():
+def cone_estimation(demo=True):
     """"
+    Demo includes image and plot visualization of keypoints and cone estimates.
+
     > Full Img 
     > Bounding Box Detection 
     > Crop Cone Imgs to feed into keypoint regression model
@@ -42,16 +41,16 @@ def main():
 
     full_image = cv2.imread(image_path)
 
-    cone_info = {}
+    cone_estimates = {}
     cropped_cones = []
     id = 0
 
-    # Gather info for each cone and store in cone_info
+    # Gather info for each cone and store in cone_estimates
     # Crop cone images
     for box in bounding_boxes:
         label = box.cls.item()
         x1, y1, x2, y2 = map(int, box.xyxy[0])
-        cone_info[id] = {"id": id, "label": label, "x1": x1, "y1": y1, "x2": x2, "y2": y2}
+        cone_estimates[id] = {"id": id, "label": label}
         cropped_img = image[y1:y2, x1:x2]
         cropped_cones.append(cropped_img)
         id += 1
@@ -63,33 +62,37 @@ def main():
 
     keypoints_2d = {}
     # Map 7 keypoints for each cone
-    for cone in cone_info.values():
-    
-        cv2.putText(full_image, str(cone["id"]), (cone["x2"], cone["y2"]), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 1)
-
+    for cone in cone_estimates.values():
         # Map keypoint model  output from cropped image to full image coordinates
         # The model output is 14 (x,y) coordinates => 7 keypoints
+
+        id = cone["id"]
+        x1, y1, x2, y2 = map(int, bounding_boxes[id].xyxy[0]) # bounding box coordinates in full image
         for point in range(0, len(keypoints[0]), 2):
-            cropped_height = cone["y2"] - cone["y1"]
-            cropped_width = cone["x2"] - cone["x1"]
+            cropped_height = y2 - y1
+            cropped_width = x2 - x1
 
             cropped_x = int(keypoints[cone["id"]][point] / 100.0 * cropped_width)
             cropped_y = int(keypoints[cone["id"]][point+1] / 100.0 * cropped_height)
-
-            full_x = int(cropped_x + cone["x1"])
-            full_y = int(cropped_y + cone["y1"])
+            
+            full_x = int(cropped_x + x1)
+            full_y = int(cropped_y + y1)
 
             # Add to 2D keypoints map for PnP
             keypoints_2d[point//2] = [full_x, full_y]
 
-            cv2.circle(full_image, (full_x, full_y), 2, (0, 0, 255), -1)
+            if demo:
+                cv2.putText(full_image, str(cone["id"]), (x2, y2), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 1)
+                cv2.circle(full_image, (full_x, full_y), 2, (0, 0, 255), -1)
 
         # Estimate cone position with PnP using all the 2d keypoints for this cone
-        rvec, tvec = pnp(keypoints_2d)
+        rvec, tvec = PnP(keypoints_2d)
         tvec = tvec / 10000
         tvec[2] /= 100
 
-        cone["pos"] = tvec
+        # 2D Coordinates for cone position in map
+        cone["X"] = tvec[0]
+        cone["Y"] = tvec[2]
     
 
     total_time_end = time.time()
@@ -97,25 +100,27 @@ def main():
     print(f"Cone Detection Time: {cone_det_end-cone_det_start:.4}")
     print(f"Total Keypoint Regr. Time: {keypoint_reg_end-keypoint_reg_start:.4}")
 
-    cv2.imshow("Keypoints", full_image)
-    cv2.waitKey(0)
-    plt.figure()
-    plt.title("Estimated Cone Position Relative to Camera")
-    plt.scatter(0, 0, color='r', label='Camera')
-    plt.xlabel("X-axis")
-    plt.ylabel("Z-axis")
-    plt.legend()
-    plt.grid(True)
-    plt.gca().set_aspect('equal', adjustable='box')
+    if demo:
+        cv2.imshow("Keypoints", full_image)
+        cv2.waitKey(0)
+        plt.figure()
+        plt.title("Estimated Cone Position Relative to Camera")
+        plt.scatter(0, 0, color='r', label='Camera')
+        plt.xlabel("X-axis")
+        plt.ylabel("Depth-axis")
+        plt.legend()
+        plt.grid(True)
+        plt.gca().set_aspect('equal', adjustable='box')
     
-    for cone in cone_info.values():   
-        x = cone["pos"][0]
-        z = cone["pos"][2]
-        plt.scatter(x, z, color=colors[cone['label']])
-        plt.annotate(f'{cone["id"]}', (x, z))
-    
-    plt.show()
+        for cone in cone_estimates.values():   
+            x = cone["X"]
+            y = cone["Y"]
+            plt.scatter(x, y, color=colors[cone['label']])
+            plt.annotate(f'{cone["id"]}', (x, y))
 
+        plt.show()
+
+    return cone_estimates
 
 if __name__ == '__main__':
-    main()
+    cone_estimation()
