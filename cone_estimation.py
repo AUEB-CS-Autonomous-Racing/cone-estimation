@@ -72,7 +72,6 @@ def main():
         # Map keypoint model  output from cropped image to full image coordinates
         # The model output is 14 (x,y) coordinates => 7 keypoints
         for point in range(0, len(keypoints[0]), 2):
-            cropped_height, cropped_width, _ = cropped_img.shape
             cropped_height = cone["y2"] - cone["y1"]
             cropped_width = cone["x2"] - cone["x1"]
 
