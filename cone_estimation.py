@@ -31,7 +31,7 @@ def cone_estimation(demo=True):
     image_path = 'full_images/amz_00045.jpg'
     image = cv2.imread(image_path)
 
-    cone_detection_src = 'models/yolov8s700.pt'
+    cone_detection_src = 'models/yolov8n.pt'
     cone_detection_model = YOLO(cone_detection_src)
     keypoint_model = KeypointRegression('models/E10-AVL9.9054.pth')
 
