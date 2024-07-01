@@ -24,7 +24,7 @@ def correspondence_2d_3d(keypoints_2d):
     return correspondences
 
 
-def pnp(points_2d):
+def PnP(points_2d):
     
     correspondences = correspondence_2d_3d(points_2d)
 
