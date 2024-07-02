@@ -120,7 +120,9 @@ def cone_estimation(demo=True):
             plt.annotate(f'{cone["id"]}', (x, y))
 
         plt.show()
-
+    
+    with open("cone_estimates.json", 'w') as f:
+        json.dump(cone_estimates, f)
     return cone_estimates
 
 if __name__ == '__main__':
