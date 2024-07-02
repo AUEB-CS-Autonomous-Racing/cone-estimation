@@ -28,7 +28,7 @@ def cone_estimation(demo=True):
 
     total_time_start = time.time()
 
-    image_path = 'full_images/amz_00045.jpg'
+    image_path = 'full_images/amz_00000.jpg'
     image = cv2.imread(image_path)
 
     cone_detection_src = 'models/yolov8n.pt'
@@ -49,7 +49,7 @@ def cone_estimation(demo=True):
     # Gather info for each cone and store in cone_estimates
     # Crop cone images
     for box in bounding_boxes:
-        label = box.cls.item()
+        label = box.cls.item() # 2 = orange, 1 = yellow, 0 = blue
         x1, y1, x2, y2 = map(int, box.xyxy[0])
         cone_estimates[id] = {"id": id, "label": label}
         cropped_img = image[y1:y2, x1:x2]
