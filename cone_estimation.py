@@ -1,4 +1,4 @@
-from keypoint_regression_model import KeypointRegression
+from keypoint_regression.keypoint_regression_model import KeypointRegression
 import cv2
 from ultralytics import YOLO
 from pnp_algorithm import PnP
@@ -14,7 +14,7 @@ colors = {
     3: '#FFA500',
 }
 
-def cone_estimation(demo=True):
+def cone_estimation(image_path, demo=True):
     """"
     Demo includes image and plot visualization of keypoints and cone estimates.
 
@@ -27,8 +27,6 @@ def cone_estimation(demo=True):
     """
 
     total_time_start = time.time()
-
-    image_path = 'full_images/amz_00000.jpg'
     image = cv2.imread(image_path)
 
     cone_detection_src = 'models/yolov8n.pt'
@@ -121,9 +119,9 @@ def cone_estimation(demo=True):
 
         plt.show()
     
-    with open("cone_estimates.json", 'w') as f:
+    with open(f"json_estimates/{image_path.replace("full_images/", "").replace(".jpg", "")}.json", 'w+') as f:
         json.dump(cone_estimates, f)
     return cone_estimates
 
 if __name__ == '__main__':
-    cone_estimation()
+    cone_estimation('full_images/38.jpg')

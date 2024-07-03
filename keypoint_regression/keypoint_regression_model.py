@@ -1,6 +1,6 @@
 from torchvision import transforms
 import torch
-from cnn import cnn
+from keypoint_regression.cnn import cnn
 
 
 

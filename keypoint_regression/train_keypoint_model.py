@@ -3,7 +3,7 @@ import os
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from cnn import cnn
+from keypoint_regression.cnn import cnn
 import json
 from PIL import Image
 from torch.utils.data import Dataset
