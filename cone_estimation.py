@@ -85,8 +85,9 @@ def cone_estimation(image_path, demo=True):
                 cv2.circle(full_image, (full_x, full_y), 2, (0, 0, 255), -1)
 
         # Estimate cone position with PnP using all the 2d keypoints for this cone
+        # TODO: Tune PnP output based on real world measurments
         rvec, tvec = PnP(keypoints_2d)
-        tvec = tvec / 10000
+        tvec /= 1000
         tvec[2] /= 100
 
         # 2D Coordinates for cone position in map
@@ -102,7 +103,6 @@ def cone_estimation(image_path, demo=True):
     if demo:
         cv2.imshow("Keypoints", full_image)
         cv2.waitKey(0)
-        plt.figure()
         plt.title("Estimated Cone Position Relative to Camera")
         plt.scatter(0, 0, color='r', label='Camera')
         plt.xlabel("X-axis")
@@ -110,6 +110,7 @@ def cone_estimation(image_path, demo=True):
         plt.legend()
         plt.grid(True)
         plt.gca().set_aspect('equal', adjustable='box')
+        plt.axis('equal')
     
         for cone in cone_estimates.values():   
             x = cone["X"]
@@ -124,4 +125,4 @@ def cone_estimation(image_path, demo=True):
     return cone_estimates
 
 if __name__ == '__main__':
-    cone_estimation('full_images/38.jpg')
+    cone_estimation('full_images/00.jpg')
