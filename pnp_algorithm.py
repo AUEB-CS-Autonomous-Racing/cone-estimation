@@ -21,7 +21,7 @@ def PnP(points_2d):
     K = get_camera_matrix()
 
     # Distortion coefficients
-    dist_coeffs = np.zeros((4, 1))  # Assuming no distortion
+    dist_coeffs = np.array([-0.01005559, 0.0777699, 0.00040632, 0.00196239, -0.10160105])
 
     ret, rvec, tvec = cv2.solvePnP(points_3d, points_2d, K, dist_coeffs)
 
