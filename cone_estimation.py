@@ -45,48 +45,80 @@ def cone_estimation(image_path, demo=True):
     results = cone_detection_model.predict(image)
     results = results[0]
 
-    if demo:
-        for box in results.boxes:
-            x1, y1, x2, y2 = box.xyxy.numpy()[0]
+    cones = []
+    for box, keypoints in zip(results.boxes, results.keypoints.data):
+        
+        bounding_box_left = box.xyxy.numpy()[0]
+
+        if demo:
+            x1, y1, x2, y2 = bounding_box_left
             conf = box.conf.item()
             class_id = int(box.cls.item())
             cv2.rectangle(image, (int(x1),int(y1)), (int(x2),int(y2)), COLORS_CV2[class_id], 1)
-        for cone in results.keypoints.data:
-            print(f"orig: {cone}")
-            for (x,y) in cone:
+            for (x,y) in keypoints:
                 cv2.circle(image, (int(x),int(y)), 1, (0, 0, 255), 1)
 
-
-    cones = []
-    for cone_points in results.keypoints.data:
-        rvec, tvec = PnP(cone_points)
+        rvec, tvec = PnP(keypoints)
         image_points_right, bounding_box_right = bounding_box_propagation(rvec, tvec)
-        x1, y1, x2, y2 = bounding_box_right
-        for point in image_points_right:
-                print(f"point[0][0](x): {point[0][0]}")
-                print(f"point[0][1](y): {point[0][1]}")
-                x, y = point[0][0], point[0][1]
-                cv2.circle(image, (int(x),int(y)), 2, (255, 0, 0), 1)
-                cv2.rectangle(image, (int(x1),int(y1)), (int(x2),int(y2)), (0, 255, 0), 1)
+        
+        if demo:
+            for point in image_points_right:
+                    x, y = point[0][0], point[0][1]
+                    cv2.circle(image, (int(x),int(y)), 2, (255, 0, 0), 1)
+                    cv2.rectangle(image, (int(x1),int(y1)), (int(x2),int(y2)), (0, 255, 0), 1, lineType=1)
 
-        print()
+        # Extract SIFT features for triangulation
+        image_left = image # temporarily for demo purposes
+        image_right = image
+        keypoints_left, descriptors_left = extract_sift_features(image_left, bounding_box_left)
+        keypoints_right, descriptors_right = extract_sift_features(image_right, bounding_box_right)
+
+        good_matches = match_features(descriptors_left, descriptors_right)
+        if good_matches is None:
+            continue
+        # matched points
+        pts1 = np.float32([keypoints_left[m.queryIdx].pt for m in good_matches])
+        pts2 = np.float32([keypoints_right[m.trainIdx].pt for m in good_matches])
+
+        # Camera calibration data
+        K1 = np.array([[895.45613853, 0, 682.3924525], [0, 667.03818821, 360.49268128], [0, 0, 1]])
+        K2 = np.array([[914.0586327, 0, 679.06288554], [0, 680.80769983, 361.59960622], [0, 0, 1]])
+
+        # Stereo camera parameters (Example values; replace with your own)
+        R = np.eye(3)  # Rotation matrix between left and right cameras
+        T = np.array([0.1, 0, 0])  # Translation vector between left and right cameras
+    
+        # Triangulate points
+        points_3d = triangulate_points(pts1, pts2, K1, K2, R, T)
+    
+        # Apply median filtering to 3D points
+        points_3d_filtered = np.median(points_3d, axis=0)
+
+        cones.append(points_3d_filtered)
+
+        print(f"3D Points: {points_3d_filtered}")
+
         # magic
-        tvec /= 1000
-        tvec[2] /= 100
+        # tvec /= 1000
+        # tvec[2] /= 100
 
-        x, y = tvec[0][0], tvec[2][0]
-        cones.append((x, y))
+        # x, y = tvec[0][0], tvec[2][0]
+        # cones.append((x, y))
 
-    cv2.imshow("img", image)
-    cv2.waitKey(0)
     cv2.destroyAllWindows()
 
     if demo:
-        x_coords, y_coords = zip(*cones)
+        X, Y, Z = zip(*cones)
+        print(X)
+        X /= 1000
+        Z /= 1000
+        Z /= 100
+        # tvec /= 1000
+        # tvec[2] /= 100
         plt.figure(figsize=(8, 6))
         # Create a scatter plot
-        plt.scatter(0, 0, color='red', marker='x', s=100, edgecolor='black')
-        plt.scatter(x_coords, y_coords, color='blue', marker='o', s=100, edgecolor='black')
+        plt.scatter(0, 0, color='red', marker='x', s=100)
+        plt.scatter(X, Z, color='blue', marker='o', s=100, edgecolor='black')
 
         # Add labels and title
         plt.xlabel('X-axis')
@@ -148,7 +180,7 @@ def bounding_box_propagation(pnp_rvec, pnp_tvec):
     y_bottom = center_y + scaled_height / 2
     y_top = center_y - scaled_height / 2
 
-    bounding_box = (x_left, y_bottom, x_right, y_top)
+    bounding_box = (x_left, y_top, x_right, y_bottom)
     return image_points_right, bounding_box
 
 
@@ -180,5 +212,53 @@ def get_camera_matrix():
               
     
     return K
+
+def extract_sift_features(image, bounding_box):
+    """Extract SIFT features within a given bounding box."""
+    x1, y1, x2, y2 = map(int, bounding_box)
+    cropped_image = image[y1:y2, x1:x2]
+    
+    sift = cv2.SIFT_create()
+    keypoints, descriptors = sift.detectAndCompute(cropped_image, None)
+    
+    keypoints = [cv2.KeyPoint(kp.pt[0] + x1, kp.pt[1] + y1, kp.size) for kp in keypoints]
+    
+    return keypoints, descriptors
+
+def match_features(desc1, desc2):
+    """Match features using KNN."""
+    if desc1 is None or desc2 is None:
+        # Return an empty list if any of the descriptors are empty
+        return None
+
+    bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=False)
+    matches = bf.knnMatch(desc1, desc2, k=2)
+    
+    # Apply ratio test
+    good_matches = []
+    for match_pair in matches:
+        if len(match_pair) != 2: # need at least 2 elements
+            return None
+        m, n = match_pair
+        if m.distance < 0.75 * n.distance:
+            good_matches.append(m)
+    
+    return good_matches
+
+def triangulate_points(pts1, pts2, K1, K2, R, T):
+    """Triangulate points from two images."""
+    P1 = np.hstack((K1, np.zeros((3, 1))))
+    P2 = np.hstack((K2 @ np.hstack((R, T.reshape(-1, 1))), np.zeros((3, 1))))
+
+
+    RT = np.hstack((R, T.reshape(-1, 1))) 
+    P2 = K2 @ RT
+
+    pts1 = pts1.T  # Transpose to (2, N)
+    pts2 = pts2.T
+    points_4d = cv2.triangulatePoints(P1, P2, pts1, pts2)
+    points_3d = points_4d[:3, :] / points_4d[3, :]
+    
+    return points_3d.T
 
 cone_estimation('full_images/00.jpg')
