@@ -23,14 +23,12 @@ COLORS_HEX = {
 
 def cone_estimation(image_path, demo=True):
     """"
-    Demo includes image and plot visualization of keypoints and cone estimates.
-
-    > Full Img 
-    > Bounding Box Detection 
-    > Crop Cone Imgs to feed into keypoint regression model
-    > Keypoint Regression on Cropped Images (x,y output on cropped coordinates) 
-    > Translation to full image coordinates
-    > PnP
+    > Input: Left Frame, Right Frame
+    > Left frame: Bounding Box detection and Keypoint regression -> PnP
+    > Bounding Box Propagation to Right frame
+    > SIFT Features (keypoints) on left and right cone pairs
+    > KNN Feature matching on features
+    > Triangulation on matched features. 
     """
 
     total_time_start = time.time()
@@ -109,16 +107,12 @@ def cone_estimation(image_path, demo=True):
 
     if demo:
         X, Y, Z = zip(*cones)
-        print(X)
-        X /= 1000
-        Z /= 1000
-        Z /= 100
         # tvec /= 1000
         # tvec[2] /= 100
         plt.figure(figsize=(8, 6))
         # Create a scatter plot
         plt.scatter(0, 0, color='red', marker='x', s=100)
-        plt.scatter(X, Z, color='blue', marker='o', s=100, edgecolor='black')
+        plt.scatter(X, Y, color='blue', marker='o', s=100, edgecolor='black')
 
         # Add labels and title
         plt.xlabel('X-axis')
